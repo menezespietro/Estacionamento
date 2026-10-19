@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ParkMaster Pro - Sistema de Gestão de Estacionamento</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            700: '#0369a1',
+                            900: '#0c4a6e',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .spot-card {
+            transition: all 0.2s ease-in-out;
+        }
+        .spot-card:hover {
+            transform: translateY(-2px);
+        }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.05);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(100, 116, 139, 0.4);
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="bg-slate-100 dark:bg-slate-900 text-slate-800 dark:text-slate-100 min-h-screen flex flex-col transition-colors duration-200">
+
+    <!-- HEADER / NAVIGATION -->
+    <header class="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 sticky top-0 z-30 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <!-- Logo & Title -->
+                <div class="flex items-center space-x-3">
+                    <div class="p-2 bg-brand-600 text-white rounded-xl shadow-md">
+                        <i data-lucide="square-parking" class="w-6 h-6"></i>
+                    </div>
+                    <div>
+                        <h1 class="font-bold text-lg leading-tight text-slate-900 dark:text-white">ParkMaster Pro</h1>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">Sistema Inteligente de Estacionamento</p>
+                    </div>
+                </div>
+
+                <!-- Live Clock & Status Bar -->
+                <div class="hidden md:flex items-center space-x-6 text-sm">
+                    <div class="flex items-center space-x-2 text-slate-600 dark:text-slate-300">
+                        <i data-lucide="clock" class="w-4 h-4 text-brand-500"></i>
+                        <span id="liveClock" class="font-mono font-medium">00:00:00</span>
+                    </div>
+                    <div class="h-4 w-px bg-slate-300 dark:bg-slate-700"></div>
+                    <div class="flex items-center space-x-2">
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400">
+                            <span class="w-2 h-2 mr-1.5 bg-emerald-500 rounded-full animate-pulse"></span> Sistema Ativo
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Actions / Controls -->
+                <div class="flex items-center space-x-3">
+                    <button id="btnNewCheckin" onclick="openCheckinModal()" class="flex items-center space-x-1.5 bg-brand-600 hover:bg-brand-700 text-white px-3.5 py-2 rounded-lg text-sm font-medium shadow-sm transition-colors">
+                        <i data-lucide="plus-circle" class="w-4 h-4"></i>
+                        <span class="hidden sm:inline">Nova Entrada</span>
+                    </button>
+                    
+                    <button id="themeToggle" onclick="toggleDarkMode()" class="p-2 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors" title="Alternar Tema">
+                        <i data-lucide="sun" class="w-5 h-5 hidden dark:block"></i>
+                        <i data-lucide="moon" class="w-5 h-5 block dark:hidden"></i>
+                    </button>
+
+                    <button onclick="openConfigModal()" class="p-2 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors" title="Configurações">
+                        <i data-lucide="settings" class="w-5 h-5"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN CONTENT CONTAINER -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+
+        <!-- DASHBOARD STATS CARDS -->
+        <section class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <!-- Total Vagas -->
+            <div class="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-medium text-slate-500 dark:text-slate-400">Total de Vagas</p>
+                    <p id="statTotalSpots" class="text-2xl font-bold text-slate-900 dark:text-white mt-1">0</p>
+                </div>
+                <div class="p-3 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-lg">
+                    <i data-lucide="layout-grid" class="w-5 h-5"></i>
+                </div>
+            </div>
+
+            <!-- Vagas Livres -->
+            <div class="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-medium text-slate-500 dark:text-slate-400">Vagas Livres</p>
+                    <p id="statFreeSpots" class="text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-1">0</p>
+                </div>
+                <div class="p-3 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded-lg">
+                    <i data-lucide="circle-check" class="w-5 h-5"></i>
+                </div>
+            </div>
+
+            <!-- Vagas Ocupadas -->
+            <div class="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-medium text-slate-500 dark:text-slate-400">Ocupadas (Taxa)</p>
+                    <div class="flex items-baseline space-x-2 mt-1">
+                        <span id="statOccupiedSpots" class="text-2xl font-bold text-rose-600 dark:text-rose-400">0</span>
+                        <span id="statOccupancyRate" class="text-xs font-semibold text-slate-500 dark:text-slate-400">(0%)</span>
+                    </div>
+                </div>
+                <div class="p-3 bg-rose-50 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400 rounded-lg">
+                    <i data-lucide="car" class="w-5 h-5"></i>
+                </div>
+            </div>
+
+            <!-- Faturamento Hoje -->
+            <div class="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-medium text-slate-500 dark:text-slate-400">Faturamento Hoje</p>
+                    <p id="statTodayRevenue" class="text-2xl font-bold text-brand-600 dark:text-brand-400 mt-1">R$ 0,00</p>
+                </div>
+                <div class="p-3 bg-brand-50 dark:bg-brand-900/30 text-brand-600 dark:text-brand-400 rounded-lg">
+                    <i data-lucide="dollar-sign" class="w-5 h-5"></i>
+                </div>
+            </div>
+        </section>
+
+        <!-- MAIN LAYOUT & CONTROLS SECTION -->
+        <section class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
+            <!-- Toolbar / Filters -->
+            <div class="p-4 border-b border-slate-200 dark:border-slate-700 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-50/50 dark:bg-slate-800/50">
+                
+                <!-- Filter Status Tabs -->
+                <div class="flex items-center space-x-1 overflow-x-auto pb-2 md:pb-0">
+                    <button onclick="setFilter('all')" id="btnFilterAll" class="px-3 py-1.5 rounded-lg text-xs font-medium bg-brand-600 text-white shadow-sm transition-colors">
+                        Todas
+                    </button>
+                    <button onclick="setFilter('free')" id="btnFilterFree" class="px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
+                        Livres
+                    </button>
+                    <button onclick="setFilter('occupied')" id="btnFilterOccupied" class="px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
+                        Ocupadas
+                    </button>
+                    <button onclick="setFilter('reserved')" id="btnFilterReserved" class="px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
+                        Reservadas
+                    </button>
+                    <button onclick="setFilter('maintenance')" id="btnFilterMaintenance" class="px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
+                        Manutenção
+                    </button>
+                </div>
+
+                <!-- Search & Type Filter -->
+                <div class="flex items-center space-x-3">
+                    <div class="relative flex-1 sm:w-64">
+                        <i data-lucide="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                        <input type="text" id="searchInput" oninput="renderGrid()" placeholder="Buscar por placa ou vaga..." class="w-full pl-9 pr-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-xs focus:ring-2 focus:ring-brand-500 focus:outline-none dark:text-white">
+                    </div>
+
+                    <select id="typeFilter" onchange="renderGrid()" class="bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs rounded-lg px-2.5 py-1.5 focus:ring-2 focus:ring-brand-500 focus:outline-none dark:text-white">
+                        <option value="all">Todos os Tipos</option>
+                        <option value="car">Carros</option>
+                        <option value="moto">Motos</option>
+                        <option value="pcd">PCD</option>
+                        <option value="elderly">Idoso</option>
+                        <option value="ev">Elétrico (EV)</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Legend Bar -->
+            <div class="px-4 py-2 border-b border-slate-200 dark:border-slate-700 text-xs flex flex-wrap gap-4 items-center justify-between text-slate-600 dark:text-slate-400 bg-white dark:bg-slate-800">
+                <div class="flex items-center space-x-4 flex-wrap gap-y-1">
+                    <span class="flex items-center"><span class="w-3 h-3 rounded-full bg-emerald-500 mr-1.5"></span> Livre</span>
+                    <span class="flex items-center"><span class="w-3 h-3 rounded-full bg-rose-500 mr-1.5"></span> Ocupada</span>
+                    <span class="flex items-center"><span class="w-3 h-3 rounded-full bg-amber-500 mr-1.5"></span> Reservada</span>
+                    <span class="flex items-center"><span class="w-3 h-3 rounded-full bg-slate-400 mr-1.5"></span> Manutenção</span>
+                </div>
+                <div class="flex items-center space-x-3 text-slate-500 text-[11px]">
+                    <span class="flex items-center"><i data-lucide="accessibility" class="w-3.5 h-3.5 mr-1 text-blue-500"></i> PCD</span>
+                    <span class="flex items-center"><i data-lucide="user-check" class="w-3.5 h-3.5 mr-1 text-purple-500"></i> Idoso</span>
+                    <span class="flex items-center"><i data-lucide="zap" class="w-3.5 h-3.5 mr-1 text-emerald-500"></i> EV</span>
+                    <span class="flex items-center"><i data-lucide="bike" class="w-3.5 h-3.5 mr-1 text-amber-500"></i> Moto</span>
+                </div>
+            </div>
+
+            <!-- Parking Grid View -->
+            <div class="p-6 bg-slate-100/50 dark:bg-slate-900/50 min-h-[380px]">
+                <div id="parkingGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                    <!-- Dynamic Parking Spots Rendered via JS -->
+                </div>
+                
+                <!-- Empty State -->
+                <div id="emptyGridState" class="hidden text-center py-12">
+                    <i data-lucide="search-x" class="w-12 h-12 text-slate-400 mx-auto mb-3"></i>
+                    <p class="text-slate-600 dark:text-slate-400 font-medium">Nenhuma vaga encontrada com os filtros atuais.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- HISTORY & TRANSACTIONS SECTION -->
+        <section class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
+            <div class="p-4 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
+                <div class="flex items-center space-x-2">
+                    <i data-lucide="history" class="w-5 h-5 text-brand-600 dark:text-brand-400"></i>
+                    <h2 class="font-bold text-slate-900 dark:text-white text-base">Histórico Recente de Entradas/Saídas</h2>
+                </div>
+                <button onclick="clearHistory()" class="text-xs text-rose-600 hover:text-rose-700 dark:text-rose-400 font-medium hover:underline">
+                    Limpar Histórico
+                </button>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-sm">
+                    <thead class="bg-slate-50 dark:bg-slate-700/50 text-xs uppercase text-slate-500 dark:text-slate-400 font-semibold border-b border-slate-200 dark:border-slate-700">
+                        <tr>
+                            <th class="px-4 py-3">Placa / Veículo</th>
+                            <th class="px-4 py-3">Vaga</th>
+                            <th class="px-4 py-3">Entrada</th>
+                            <th class="px-4 py-3">Saída</th>
+                            <th class="px-4 py-3">Permanência</th>
+                            <th class="px-4 py-3">Valor Pago</th>
+                            <th class="px-4 py-3 text-right">Ação</th>
+                        </tr>
+                    </thead>
+                    <tbody id="historyTableBody" class="divide-y divide-slate-200 dark:divide-slate-700">
+                        <!-- History Rows Rendered via JS -->
+                    </tbody>
+                </table>
+            </div>
+            <div id="emptyHistoryState" class="p-8 text-center text-slate-500 text-sm">
+                Nenhum histórico registrado até o momento.
+            </div>
+        </section>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="bg-white dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 py-4 mt-auto">
+        <div class="max-w-7xl mx-auto px-4 text-center text-xs text-slate-500 dark:text-slate-400 flex flex-col sm:flex-row justify-between items-center gap-2">
+            <p>ParkMaster Pro &copy; 2026 - Gestão Inteligente de Estacionamentos</p>
+            <p class="flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-emerald-500"></span> Operação Normal
+            </p>
+        </div>
+    </footer>
+
+
+    <!-- MODAL: CHECK-IN (NOVA ENTRADA) -->
+    <div id="checkinModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 w-full max-w-md overflow-hidden transform transition-all">
+            <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center bg-slate-50 dark:bg-slate-800/80">
+                <div class="flex items-center space-x-2">
+                    <i data-lucide="log-in" class="w-5 h-5 text-brand-600"></i>
+                    <h3 class="font-bold text-slate-900 dark:text-white">Registrar Entrada de Veículo</h3>
+                </div>
+                <button onclick="closeCheckinModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <form id="checkinForm" onsubmit="handleCheckinSubmit(event)" class="p-6 space-y-4">
+                <!-- Vaga Atribuída -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Selecionar Vaga *</label>
+                    <select id="modalSpotSelect" required class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none dark:text-white">
+                        <!-- Populated by JS -->
+                    </select>
+                </div>
+
+                <!-- Placa do Veículo -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Placa do Veículo *</label>
+                    <input type="text" id="modalPlate" required placeholder="ABC-1D23 ou ABC-1234" uppercase class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-sm font-mono tracking-wider focus:ring-2 focus:ring-brand-500 focus:outline-none uppercase dark:text-white">
+                </div>
+
+                <!-- Modelo / Marca -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Modelo / Marca / Cor</label>
+                    <input type="text" id="modalModel" placeholder="Ex: Corolla Prata, Civic Preto..." class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none dark:text-white">
+                </div>
+
+                <!-- Tipo de Veículo -->
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Tipo de Veículo</label>
+                        <select id="modalVehicleType" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none dark:text-white">
+                            <option value="car">Carro / Passeio</option>
+                            <option value="suv">SUV / Camionete</option>
+                            <option value="moto">Motocicleta</option>
+                            <option value="ev">Elétrico (EV)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Categoria de Entrada</label>
+                        <select id="modalCategory" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none dark:text-white">
+                            <option value="comum">Comum</option>
+                            <option value="pcd">PCD</option>
+                            <option value="elderly">Idoso</option>
+                            <option value="vip">Mensalista / VIP</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Observações -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Observações / Avarias</label>
+                    <input type="text" id="modalNotes" placeholder="Sem avarias visíveis" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none dark:text-white">
+                </div>
+
+                <!-- Modal Actions -->
+                <div class="flex justify-end space-x-3 pt-3 border-t border-slate-200 dark:border-slate-700">
+                    <button type="button" onclick="closeCheckinModal()" class="px-4 py-2 border border-slate-300 dark:border-slate-700 rounded-lg text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-lg text-xs font-medium shadow-sm flex items-center space-x-1.5">
+                        <i data-lucide="check" class="w-4 h-4"></i>
+                        <span>Confirmar Entrada</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: CHECK-OUT / FECHAMENTO -->
+    <div id="checkoutModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 w-full max-w-md overflow-hidden transform transition-all">
+            <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center bg-slate-50 dark:bg-slate-800/80">
+                <div class="flex items-center space-x-2">
+                    <i data-lucide="log-out" class="w-5 h-5 text-rose-600"></i>
+                    <h3 class="font-bold text-slate-900 dark:text-white">Saída de Veículo & Pagamento</h3>
+                </div>
+                <button onclick="closeCheckoutModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <div class="p-6 space-y-4">
+                <!-- Vehicle Info Box -->
+                <div class="bg-slate-50 dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-700 space-y-2">
+                    <div class="flex justify-between items-center">
+                        <span class="text-xs text-slate-500">Vaga</span>
+                        <span id="coSpotName" class="font-bold text-brand-600 dark:text-brand-400 text-sm">A-01</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-xs text-slate-500">Placa</span>
+                        <span id="coPlate" class="font-mono font-bold text-slate-900 dark:text-white text-base">ABC-1234</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-xs text-slate-500">Veículo</span>
+                        <span id="coModel" class="text-xs font-medium text-slate-700 dark:text-slate-300">Corolla - Passeio</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-xs text-slate-500">Entrada</span>
+                        <span id="coCheckinTime" class="text-xs text-slate-700 dark:text-slate-300 font-mono">10/10/2026 14:00</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-xs text
